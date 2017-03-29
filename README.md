@@ -1,10 +1,12 @@
-<p align="center"><img width="40%" src="doc/teaser.png" /></p>
+<p align="center"><img width="100%" src="doc/teaser.png" /></p>
+
+OctNet uses efficient space partitioing structures (i.e. octrees) to reduce memory and compute requirements of 3D convolutional neural networks, thereby enabling deep learning at high resolutions.
 
 This is the code for the paper:
 
 **[OctNet: Learning Deep 3D Representations at High Resolutions](https://arxiv.org/abs/1611.05009)**
 <br>
-Gernot Riegler, Ali Osman Ulusoy and Andreas Geiger
+[Gernot Riegler](https://griegler.github.io/), [Ali Osman Ulusoy](https://avg.is.tuebingen.mpg.de/person/oulusoy) and [Andreas Geiger](https://avg.is.tuebingen.mpg.de/person/ageiger)
 <br>
 To appear at [CVPR 2017](http://cvpr2017.thecvf.com/) (oral)
 
@@ -29,10 +31,23 @@ If you find this code useful for your research, please cite
 - `geometry` - Simple geometry routines mainly used in the `create` package.
 - `py` - This directory a small python wrapper to the `create` package and some `core` functions. 
 - `th` - A full featured torch wrapper for all network operations. See (here)[th/README.md] for more information.
-- `example` - Contains an example to create data and train a network on ModelNet10.
+- [`example`](example/01_classification_modelnet/README.md) - Contains an example to create data and train a network on ModelNet10.
 
 
-## Building
+## Requirements
+We tried to keep the requirements small.
+To build the individual projects you will need:
+- `cmake` to setup the projects
+- `gcc`, or `clang` to build the core project
+- `nvcc` (CUDA) to compile the GPU network operations
+- `cython` to compile the Python wrapper
+- `torch` to setup the torch wrapper
+
+Optionally, you will need
+- `OpenMP` for the parallelization of the CPU functions
+
+
+## Build
 The building process of the individual packages should be fairly. 
 All packages, except the Python wrapper `py`, are cmake projects. 
 Therefore, you can create a `build` directory in the individual package folder and call `cmake` and `make`.
@@ -53,15 +68,3 @@ If you do not want to repeat this for all the packages, we provide two simple ba
 - `build_cpu.sh` - builds all the CPU code for OctNet
 - `build_all.sh` - same as above, but also builds the GPU network functions and the GPU wrapper code for torch
 
-
-## Requirements
-We tried to keep the requirements small.
-To build the individual projects you will need:
-- `cmake` to setup the projects
-- `gcc`, or `clang` to build the core project
-- `nvcc` (CUDA) to compile the GPU network operations
-- `cython` to compile the Python wrapper
-- `torch` to setup the torch wrapper
-
-Optionally, you will need
-- `OpenMP` for the parallelization of the CPU functions
