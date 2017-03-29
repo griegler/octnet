@@ -1,0 +1,10 @@
+core/build
+core_gpu/build
+create/build
+geometry/build
+py/build
+py/pyoctnet.cpp
+py/pyoctnet.so
+th/cpu/build
+th/gpu/build
+doc/generated_doc/
