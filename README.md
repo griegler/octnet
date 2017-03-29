@@ -30,8 +30,8 @@ If you find this code useful for your research, please cite
 - `create` - Code to pre-process 3D data (point clouds, meshes, dense volumes) and convert it to the grid-octree structure.
 - `geometry` - Simple geometry routines mainly used in the `create` package.
 - `py` - This directory a small python wrapper to the `create` package and some `core` functions. 
-- `th` - A full featured torch wrapper for all network operations. See (here)[th/README.md] for more information.
-- [`example`](example/01_classification_modelnet/README.md) - Contains an example to create data and train a network on ModelNet10.
+- `th` - A full featured torch wrapper for all network operations. 
+- [`example`](example/01_classification_modelnet/) - Contains an example to create data and train a network on ModelNet10.
 
 
 ## Requirements
