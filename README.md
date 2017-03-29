@@ -48,7 +48,7 @@ Optionally, you will need
 
 
 ## Build
-The building process of the individual packages should be fairly. 
+The building process of the individual packages should be fairly easy. 
 All packages, except the Python wrapper `py`, are cmake projects. 
 Therefore, you can create a `build` directory in the individual package folder and call `cmake` and `make`.
 For example, to build the `core` package:
