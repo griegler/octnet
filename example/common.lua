@@ -1,6 +1,5 @@
 local paths = require('paths')
 local lfs = require('lfs')
-local hdf5 = require('hdf5')
 
 local common = {}
 
