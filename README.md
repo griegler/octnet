@@ -1,6 +1,6 @@
 <p align="center"><img width="100%" src="doc/teaser.png" /></p>
 
-OctNet uses efficient space partitioing structures (i.e. octrees) to reduce memory and compute requirements of 3D convolutional neural networks, thereby enabling deep learning at high resolutions.
+OctNet uses efficient space partitioning structures (i.e. octrees) to reduce memory and compute requirements of 3D convolutional neural networks, thereby enabling deep learning at high resolutions.
 
 This is the code for the paper:
 
