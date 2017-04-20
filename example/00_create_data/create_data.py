@@ -29,7 +29,7 @@ dense[:,:,1] = 1
 dense[:,:,vx_res-2] = 1
 val_range = np.array([(0.9, 1.1)], dtype=np.float32)
 oc_from_dense1 = pyoctnet.Octree.create_from_dense(dense, val_range, n_threads=n_threads)
-oc_from_dense2 = pyoctnet.Octree.create_from_dense2(dense, dense[np.newaxis,...], n_threads=n_threads)
+oc_from_dense2 = pyoctnet.Octree.create_from_dense2(dense, dense[np.newaxis,...].copy(), n_threads=n_threads)
 
 # create from point cloud
 xyz = np.random.normal(0, 1, (100, 3)).astype(np.float32)
