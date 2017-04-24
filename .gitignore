@@ -8,3 +8,6 @@ py/pyoctnet.so
 th/cpu/build
 th/gpu/build
 doc/generated_doc/
+example/**/*.pyc
+example/**/*.ply
+
