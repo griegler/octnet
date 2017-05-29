@@ -190,6 +190,8 @@ function common.test_epoch(opt, data_loader)
   net:evaluate()
 
   local avg_f = 0
+  local accuracy = 0
+  local n_samples = 0
   for batch_idx = 1, n_batches do
     print(string.format('[INFO] test batch %d/%d', batch_idx, n_batches))
 
@@ -203,10 +205,19 @@ function common.test_epoch(opt, data_loader)
     local f = criterion:forward(output, target)
     print(string.format('[INFO] net/crtrn fwd took %f[s]', timer:time().real))
     avg_f = avg_f + f
+    
+    local maxs, indices = torch.max(output, 2)
+    for bidx = 1, target:size(1) do
+      if indices[bidx][1] == target[bidx] then
+        accuracy = accuracy + 1
+      end
+      n_samples = n_samples + 1
+    end
   end 
   avg_f = avg_f / n_batches
+  accuracy = accuracy / n_samples
 
-  print(string.format('test_epoch=%d, avg_f=%f', opt.epoch, avg_f))
+  print(string.format('test_epoch=%d, avg_f=%f, accuracy=%f', opt.epoch, avg_f, accuracy))
 end
 
 
