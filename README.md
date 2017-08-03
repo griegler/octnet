@@ -8,9 +8,11 @@ This is the code for the paper:
 <br>
 [Gernot Riegler](https://griegler.github.io/), [Ali Osman Ulusoy](https://avg.is.tuebingen.mpg.de/person/oulusoy) and [Andreas Geiger](https://avg.is.tuebingen.mpg.de/person/ageiger)
 <br>
-To appear at [CVPR 2017](http://cvpr2017.thecvf.com/) (oral)
+[CVPR 2017](http://cvpr2017.thecvf.com/)
 
 > We present OctNet, a representation for deep learning with sparse 3D data. In contrast to existing models, our representation enables 3D convolutional networks which are both deep and high resolution. Towards this goal, we exploit the sparsity in the input data to hierarchically partition the space using a set of unbalanced octrees where each leaf node stores a pooled feature representation. This allows to focus memory allocation and computation to the relevant dense regions and enables deeper networks without compromising resolution. We demonstrate the utility of our OctNet representation by analyzing the impact of resolution on several 3D tasks including 3D object classification, orientation estimation and point cloud labeling.
+
+[![CVPR Presentation](https://img.youtube.com/vi/qYyephF2BBw/0.jpg)](https://www.youtube.com/watch?v=qYyephF2BBw)
 
 If you find this code useful for your research, please cite
 
