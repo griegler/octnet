@@ -100,7 +100,7 @@ protected:
 
 extern "C" {
 
-octree* octree_create_from_dense_cpu(const ot_data_t* data, int depth, int height, int width, int n_ranges, const ot_data_t* ranges, bool fit, int fit_multiply, bool pack, int n_threads);
+octree* octree_create_from_dense_cpu(const ot_data_t* data, int feature_size, int depth, int height, int width, bool fit, int fit_multiply, bool pack, int n_threads);
 octree* octree_create_from_dense2_cpu(const ot_data_t* occupancy, const ot_data_t* features, int feature_size, int depth, int height, int width, bool fit, int fit_multiply, bool pack, int n_threads);
 
 octree* octree_create_from_mesh_cpu(int n_verts_, float* verts_, int n_faces_, int* faces, bool rescale_verts, ot_size_t depth, ot_size_t height, ot_size_t width, bool fit, int fit_multiply, bool pack, int pad, int n_threads);
@@ -109,6 +109,7 @@ octree* octree_create_from_obj_cpu(const char* path, ot_size_t depth, ot_size_t 
 
 octree* octree_create_from_pc_simple_cpu(float* xyz, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, bool normalize, bool normalize_inplace, bool fit, int fit_multiply, bool pack, int pad, int n_threads);
 octree* octree_create_from_pc_cpu(float* xyz, const float* features, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, bool normalize, bool normalize_inplace, bool fit, int fit_multiply, bool pack, int pad, int n_threads);
+void octree_create_dense_from_pc_cpu(const float* xyz, const float* features, float* vol, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, int n_threads);
 
 
 }

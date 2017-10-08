@@ -140,6 +140,12 @@ cdef extern from "../core/include/octnet/cpu/io.h":
   void dense_write_cpu(const char* path, int n_dim, const int* dims, const ot_data_t* data);
 
 
+cdef extern from "../core/include/octnet/cpu/misc.h":
+  void octree_determine_gt_split_cpu(const octree* struc, const ot_data_t* gt, octree* out);
+
+cdef extern from "../core/include/octnet/cpu/split.h":
+  void octree_split_dense_reconstruction_surface_fres_cpu(const ot_data_t* features, const ot_data_t* reconstruction, int n, int dense_depth, int dense_height, int dense_width, int feature_size, ot_data_t rec_thr_from, ot_data_t rec_thr_to, int band, octree* out);
+
 cdef extern from "../core/include/octnet/cpu/pool.h":
   void octree_gridpool2x2x2_max_cpu(const octree* in_oc, octree* out);
 
@@ -154,13 +160,14 @@ cdef extern from "../core/include/octnet/cpu/combine.h":
   void octree_extract_feature_cpu(const octree* grid_in, int feature_from, int feature_to, octree* out);
 
 cdef extern from "../create/include/octnet/create/create.h":
-  octree* octree_create_from_dense_cpu(const ot_data_t* data, int depth, int height, int width, int n_ranges, const ot_data_t* ranges, bool fit, int fit_multiply, bool pack, int n_threads);
+  octree* octree_create_from_dense_cpu(const ot_data_t* data, int feature_size, int depth, int height, int width, bool fit, int fit_multiply, bool pack, int n_threads);
   octree* octree_create_from_dense2_cpu(const ot_data_t* occupancy, const ot_data_t* features, int feature_size, int depth, int height, int width, bool fit, int fit_multiply, bool pack, int n_threads);
   octree* octree_create_from_mesh_cpu(int n_verts_, float* verts_, int n_faces_, int* faces, bool rescale_verts, ot_size_t depth, ot_size_t height, ot_size_t width, bool fit, int fit_multiply, bool pack, int pad, int n_threads);
   octree* octree_create_from_off_cpu(const char* path, ot_size_t depth, ot_size_t height, ot_size_t width, const float R[9], bool fit, int fit_multiply, bool pack, int pad, int n_threads);
   octree* octree_create_from_obj_cpu(const char* path, ot_size_t depth, ot_size_t height, ot_size_t width, const float R[9], bool fit, int fit_multiply, bool pack, int pad, int n_threads);
   octree* octree_create_from_pc_simple_cpu(float* xyz, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, bool normalize, bool normalize_inplace, bool fit, int fit_multiply, bool pack, int pad, int n_threads);
   octree* octree_create_from_pc_cpu(float* xyz, const float* features, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, bool normalize, bool normalize_inplace, bool fit, int fit_multiply, bool pack, int pad, int n_threads);
+  void octree_create_dense_from_pc_cpu(const float* xyz, const float* features, float* vol, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, int n_threads);
 
 cdef extern from "../create/include/octnet/create/utils.h":
   void octree_scanline_fill(octree* grid, ot_data_t fill_value);
@@ -546,7 +553,7 @@ cdef class Octree:
   """
   def cdhw_to_octree(self, float[:,:,:,:,::1] dense):
     cdef octree* ret = octree_new_cpu()
-    cdhw_to_octree_avg_cpu(self.grid, dense.shape[1], dense.shape[2], dense.shape[3], &(dense[0,0,0,0,0]), dense.shape[0], ret)
+    cdhw_to_octree_avg_cpu(self.grid, dense.shape[2], dense.shape[3], dense.shape[4], &(dense[0,0,0,0,0]), dense.shape[1], ret)
     cdef Octree grid = Octree()
     grid.set_grid(ret)
     return grid
@@ -565,6 +572,29 @@ cdef class Octree:
   """
   def write_to_cdhw(self, char* path):
     octree_cdhw_write_cpu(path, self.grid)
+
+  """
+  Experimental function.
+  @see octree_determine_gt_split_cpu for more details.
+  """
+  def determine_gt_split(self, float[:,:,:,::1] gt, Octree out):
+    if self.grid[0].n != gt.shape[0]:
+      raise Exception('n does not match')
+    if self.grid[0].grid_depth * 8 != gt.shape[1]:
+      raise Exception('n does not match')
+    if self.grid[0].grid_height * 8 != gt.shape[2]:
+      raise Exception('n does not match')
+    if self.grid[0].grid_width * 8 != gt.shape[3]:
+      raise Exception('n does not match')
+    octree_determine_gt_split_cpu(self.grid, &(gt[0,0,0,0]), out.grid)
+
+  """
+  Experimental function.
+  @see octree_split_dense_reconstruction_surface_fres_cpu for more details.
+  """
+  def split_dense_rec_surf_fres(self, float[:,:,:,:,::1] feat, float[:,:,:,:,::1] rec, float rec_thr_from, float rec_thr_to, int band):
+    octree_split_dense_reconstruction_surface_fres_cpu(&(feat[0,0,0,0,0]), &(rec[0,0,0,0,0]), feat.shape[0],feat.shape[2],feat.shape[3],feat.shape[4],feat.shape[1], rec_thr_from, rec_thr_to, band, self.grid)
+    return self
 
   """ 
   Applies 2x2x2 grid pooling (max) on this instance and stores the result in the
@@ -621,10 +651,8 @@ cdef class Octree:
   @param n_threads number of CPU threads that should be used for this function.
   """
   @classmethod
-  def create_from_dense(cls, float[:,:,::1] dense, float[:, ::1] ranges, bool fit=False, int fit_multiply=1, bool pack=False, int n_threads=1):
-    if ranges.shape[1] != 2:
-      raise Exception('ranges number of columns has to be 2')
-    cdef octree* ret = octree_create_from_dense_cpu(&(dense[0,0,0]), dense.shape[0], dense.shape[1], dense.shape[2], ranges.shape[0], &(ranges[0,0]), fit, fit_multiply, pack, n_threads)
+  def create_from_dense(cls, float[:,:,:,::1] dense, bool fit=False, int fit_multiply=1, bool pack=False, int n_threads=1):
+    cdef octree* ret = octree_create_from_dense_cpu(&(dense[0,0,0,0]), dense.shape[0], dense.shape[1], dense.shape[2], dense.shape[3], fit, fit_multiply, pack, n_threads)
     cdef Octree grid = Octree()
     grid.set_grid(ret)
     return grid
@@ -769,6 +797,17 @@ cdef class Octree:
     cdef Octree grid = Octree()
     grid.set_grid(ret)
     return grid
+
+  @classmethod
+  def create_dense_from_pc(cls, float[:,::1] xyz, float[:,::1] features, ot_size_t depth, ot_size_t height, ot_size_t width, int n_threads=1):
+    if xyz.shape[0] != features.shape[0]:
+      raise Exception('rows of xyz and features differ')
+    if xyz.shape[1] != 3:
+      raise Exception('xyz must have 3 columns (xyz)')
+    dense = np.empty((features.shape[1], depth, height, width), dtype=np.float32)
+    cdef float[:,:,:,::1] dense_view = dense
+    octree_create_dense_from_pc_cpu(&(xyz[0,0]), &(features[0,0]), &(dense_view[0,0,0,0]), xyz.shape[0], features.shape[1], depth, height, width, n_threads)
+    return dense
 
   """
   Given a voxelized octree uses parity count from the three orthogonal views

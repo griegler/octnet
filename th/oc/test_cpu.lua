@@ -949,6 +949,204 @@ function octest.OctreeLogSoftMax()
 end
 
 
+function octest.OctreeSplit()
+  local function bwd(data, struct, grad_out)
+    local o2d = oc.OctreeToCDHW():float()
+    local d2o = oc.CDHWToOctree(o2d, 'avg'):float()
+
+    local out_cdhw = o2d:forward(data)
+    o2d.received_input = struct
+    local out = d2o:forward(out_cdhw)
+    local grad_d2o = d2o:backward(out_cdhw, grad_out)
+    local grad_in = o2d:backward(data, grad_d2o)
+    return grad_in
+  end
+
+  local function test_by_prob(prob, data)
+    local threshold = 0
+    local mod_prob = nn.Identity():float()
+    local mod = oc.OctreeSplitByProb(mod_prob, threshold, true):float()
+
+    mod_prob:forward(prob)
+    local mod_out = mod:forward(data)
+
+    -- test structure
+    for grid_idx = 1, prob:n_blocks() do
+      for bit_idx = 1, 73 do
+        local in_bit = prob:tree_isset_bit(grid_idx, bit_idx)
+        local in_pa_bit = prob:tree_isset_bit(grid_idx, prob:tree_parent_bit_idx(bit_idx))
+        local out_bit = mod_out:tree_isset_bit(grid_idx, bit_idx)
+        local out_pa_bit = mod_out:tree_isset_bit(grid_idx, mod_out:tree_parent_bit_idx(bit_idx))
+        if in_bit == true then 
+          mytester:assert( out_bit == true, 'OctreeSplit: split node in in is not replicated in mod_out' ) 
+        end
+        if in_bit == false and (bit_idx == 1 or in_pa_bit == true) then
+          local in_data_idx = prob:tree_data_idx(grid_idx, bit_idx)
+          -- local p = prob.grid.data_ptrs[grid_idx-1][in_data_idx]
+          local p = prob.grid.data[prob.grid.prefix_leafs[grid_idx-1] * prob.grid.feature_size + in_data_idx]
+          if p >= threshold then
+            mytester:assert( out_bit == true, string.format('OctreeSplitByProb: there should be a split because p (%f) > threshold (%f)', p, threshold) ) 
+          end 
+        end
+        if out_bit == true then
+          mytester:assert(bit_idx == 1 or out_pa_bit == true, ' OctreeSplitByProb: there can not be a split without a parent split')
+        end 
+      end 
+    end 
+
+    -- test fwd content
+    local oc_out = oc.OctreeToCDHW():forward(mod_out)
+    local de_out = oc.OctreeToCDHW():forward(data) 
+    local err = torch.abs(oc_out - de_out):max()
+    mytester:assert(err < 1e-6, 'error in OctreeSplitByProb forward err='..err)
+
+    local grad_out = mod_out:clone():apply(function() return torch.uniform(-1,1) end)
+    local oc_grad = bwd(data, mod_out, grad_out:clone())
+    local de_grad = mod:backward(data, grad_out)
+    mytester:assert(oc_grad:equals(de_grad, 1e-4, true), 'error in OctreeSplitByProb backward')
+  end
+
+  local function test_full(data)
+    local mod = oc.OctreeSplitFull():float()
+    local mod_out = mod:forward(data)
+
+    -- test structure
+    mytester:assert(mod_out:n_leafs() == mod_out:n_blocks()*512, 'error in OctreeSplitFull struct')
+
+    -- test fwd content
+    local oc_out = oc.OctreeToCDHW():forward(mod_out)
+    local de_out = oc.OctreeToCDHW():forward(data) 
+    local err = torch.abs(oc_out - de_out):max()
+    mytester:assert(err < 1e-6, 'error in OctreeSplitFull forward err='..err)
+
+    local grad_out = mod_out:clone():apply(function() return torch.uniform(-1,1) end)
+    local oc_grad = bwd(data, mod_out, grad_out:clone())
+    local de_grad = mod:backward(data, grad_out)
+    mytester:assert(oc_grad:equals(de_grad, 1e-4, true), 'error in OctreeSplitFull backward')
+  end
+
+  local function test_densesurfrecfres(n, fs, vx_res, band)
+    local features = torch.rand(n, fs, vx_res,vx_res,vx_res):float()
+    local rec = torch.rand(n, 1, vx_res,vx_res,vx_res):float()
+
+    local rec_mod = nn.Identity()
+    rec_mod:forward(rec)
+    local mod = oc.OctreeDenseSplitSurfFres(rec_mod, 0.95, 1.0, band):float()
+    local out = mod:forward(features)
+    
+    local test_mod = nn.Sequential()
+      :add( oc.CDHWToOctree(mod, 'avg') )
+    test_mod = test_mod:float()
+    mod.received_input = out
+    local test_out = test_mod:forward(features)
+
+    -- out = out:float()
+    -- test_out = test_out:float()
+    -- print(features)
+    -- print(rec)
+    -- out:print()
+    -- test_out:print()
+    mytester:assert(out:equals(test_out, 1e-6, true), 'error in OctreeDenseSplitSurfFres forward')
+
+
+    local grad_out = out:clone()
+    grad_out:apply(function(x) return math.random() end)
+    -- grad_out = grad_out:float()
+
+    local out = mod:backward(features, grad_out)
+    local test_out = mod:backward(features, grad_out)
+
+    -- print(out)
+    -- print(test_out)
+    local err = torch.abs(out - test_out):max()
+    mytester:assert(err < 1e-6, 'error in OctreeDenseSplitSurfFres backward')
+  end
+
+  for _, band in ipairs{0,1,3} do
+    test_densesurfrecfres(1, 1, 8, band)
+    test_densesurfrecfres(1, 1, 16, band)
+    test_densesurfrecfres(1, 3, 16, band)
+    test_densesurfrecfres(4, 5, 32, band)
+  end
+
+  for n in ipairs{1, 4} do
+    for _, fs in ipairs{1,3,5} do
+      local data = test_utils.octree_rand(n, 1,1,1, fs, 0,0,0, -1,1)
+      test_by_prob(test_utils.octree_alter_fs(data, 1), data)
+      test_full(data)
+
+      local data = test_utils.octree_rand(n, 1,1,1, fs, 1,0,0, -1,1)
+      test_by_prob(test_utils.octree_alter_fs(data, 1), data)
+      test_full(data)
+
+      local data = test_utils.octree_rand(n, 1,1,1, fs, 1,1,0, -1,1)
+      test_by_prob(test_utils.octree_alter_fs(data, 1), data)
+      test_full(data)
+
+      local data = test_utils.octree_rand(n, 1,1,1, fs, 1,1,1, -1,1)
+      test_by_prob(test_utils.octree_alter_fs(data, 1), data)
+      test_full(data)
+      
+      local data = test_utils.octree_rand(n, 1,1,1, fs, 0.5,0.5,0.5, -1,1)
+      test_by_prob(test_utils.octree_alter_fs(data, 1), data)
+      test_full(data)
+      
+      local data = test_utils.octree_rand(n, 2,3,4, fs, 0.5,0.5,0.5, -1,1)
+      test_by_prob(test_utils.octree_alter_fs(data, 1), data)
+      test_full(data)
+    end
+  end
+end
+
+
+function octest.OctreeMaskByLabel()
+  local function test(input)
+    local labels = input:clone()
+    labels.grid.feature_size = 1
+    labels:update_prefix_leafs()
+    local data = torch.FloatTensor(labels:n_leafs() * labels:feature_size())
+    data:apply(function() return torch.random(1, 3) end)
+    labels:cpy_data(data)
+
+    local mask_label = 1
+
+    local input_d = oc.OctreeToCDHW():forward(input)
+    local labels_d = oc.OctreeToCDHW():forward(labels)
+
+    local out = input:mask_by_label(labels, mask_label, true)
+    local out_d = oc.OctreeToCDHW():forward(out)
+
+    for b = 1, input_d:size(1) do
+    for c = 1, input_d:size(2) do
+    for d = 1, input_d:size(3) do
+    for h = 1, input_d:size(4) do
+    for w = 1, input_d:size(5) do
+      local l = labels_d[{b,1,d,h,w}]
+      local i = input_d[{b,c,d,h,w}]
+      local o = out_d[{b,c,d,h,w}]
+      if l == mask_label then
+        mytester:assert(o == 0, 'error in OctreeMaskByLabel')
+      else
+        mytester:assert(o == i, 'error in OctreeMaskByLabel')
+      end
+    end
+    end
+    end
+    end
+    end
+  end
+
+  for _, n in ipairs{1, 4} do
+    test(test_utils.octree_rand(n, 2,2,2, 3, 0,0,0))
+    test(test_utils.octree_rand(n, 2,2,2, 3, 1,0,0))
+    test(test_utils.octree_rand(n, 2,2,2, 3, 1,1,0))
+    test(test_utils.octree_rand(n, 2,2,2, 3, 1,1,1))
+    test(test_utils.octree_rand(n, 2,2,2, 3, 0.5,0.5,0.5))
+    test(test_utils.octree_rand(n, 2,4,6, 3, 0.5,0.5,0.5))
+    test(test_utils.octree_rand(n, 4,8,6, 8, 0.5,0.5,0.5))
+  end
+end
+
 
 function octest.OctreeMSECriterion()
   local function test(in1)

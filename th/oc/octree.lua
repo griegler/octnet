@@ -611,6 +611,33 @@ function Octree:mul(val)
   return self
 end
 
+function Octree:sign()
+  if self._type == 'oc_float' then
+    oc.cpu.octree_sign_cpu(self.grid)
+  elseif self._type == 'oc_cuda' then
+    oc.gpu.octree_sign_gpu(self.grid)
+  end
+  return self
+end
+
+function Octree:abs()
+  if self._type == 'oc_float' then
+    oc.cpu.octree_abs_cpu(self.grid)
+  elseif self._type == 'oc_cuda' then
+    oc.gpu.octree_abs_gpu(self.grid)
+  end
+  return self
+end
+
+function Octree:log()
+  if self._type == 'oc_float' then
+    oc.cpu.octree_log_cpu(self.grid)
+  elseif self._type == 'oc_cuda' then
+    oc.gpu.octree_log_gpu(self.grid)
+  end
+  return self
+end
+
 function Octree:min()
   if self._type == 'oc_float' then
     return oc.cpu.octree_min_cpu(self.grid)

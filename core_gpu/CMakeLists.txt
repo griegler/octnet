@@ -67,7 +67,9 @@ set(OCTREE_GPU_SRCS
   src/gridpool.cu
   src/gridunpool.cu
   src/activations.cu
+  src/split.cu
   src/math.cu
+  src/misc.cu
   src/concat.cu
   src/combine.cu
   src/loss.cu

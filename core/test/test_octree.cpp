@@ -35,6 +35,7 @@
 #include "octnet/cpu/dense.h"
 #include "octnet/cpu/io.h"
 #include "octnet/cpu/unpool.h"
+#include "octnet/cpu/split.h"
 
 void test_split_grid_idx_(int n, int grid_depth, int grid_height, int grid_width) {
   octree grid;
@@ -185,6 +186,19 @@ void test_IO(int n_threads) {
   std::cout << "[DONE]" << std::endl;
 }
 
+void test_split_rec_surf() {
+  
+  octree* rec = create_test_octree_rand(1, 1,1,1, 1, 0,0,0);
+  octree* in = octree_new_cpu();
+  octree_gridunpool2x2x2_cpu(rec, in);
+
+  octree* out = octree_new_cpu();
+  octree_split_reconstruction_surface_cpu(in, rec, 0, 1e9, out);
+
+  octree_free_cpu(rec);
+  octree_free_cpu(in);
+  octree_free_cpu(out);
+}
 
 int main() {
   srand(time(NULL));
@@ -193,6 +207,7 @@ int main() {
   test_cdhw_to_octree();
   test_combine_extract_n();
   test_IO(1); test_IO(4);
+  test_split_rec_surf();
 
   return 0;
 }

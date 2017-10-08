@@ -66,6 +66,9 @@ end
 function OctreeConvolutionMM:updateOutput(input)
   local n_grids = self.n_grids or -1
 
+  -- print(input, input:size())
+  -- print(string.format('[OctreeConvolutionMM] update output %d -> %d', self.nInputPlane, self.nOutputPlane))
+
   if input:feature_size() ~= self.nInputPlane then
     error('invalid input size, self.nInputPlane='..self.nInputPlane..', input:feature_size()='..input:feature_size())
   end
@@ -76,6 +79,8 @@ function OctreeConvolutionMM:updateOutput(input)
     local cublas_handle = get_cublas_handle()
     oc.gpu.octree_conv_mm_gpu(cublas_handle, input.grid, self.weight:data(), self.bias:data(), self.nOutputPlane, n_grids, self.output.grid)
   end
+
+  -- print(string.format('[OctreeConvolutionMM] DONE update output %d -> %d', self.nInputPlane, self.nOutputPlane))
 
   return self.output
 end 
@@ -117,5 +122,6 @@ function OctreeConvolutionMM:__tostring__()
      (self.padT ~=0 or self.padW ~= 0 or self.padH ~= 0) then
     s = s .. ', ' .. self.padT .. ',' .. self.padW .. ',' .. self.padH
   end
+  s = s .. ', n_grids=' .. self.n_grids
   return s .. ')'
  end

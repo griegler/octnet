@@ -51,9 +51,11 @@ set(OCTREE_CPU_SRCS
   src/gridpool.cpp
   src/gridunpool.cpp
   src/math.cpp
+  src/misc.cpp
   src/concat.cpp
   src/combine.cpp
   src/activations.cpp
+  src/split.cpp
   src/loss.cpp
   src/volumetric_upsampling.cpp
 )

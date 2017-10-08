@@ -280,3 +280,52 @@ octree* octree_create_from_pc_cpu(float* xyz, const float* features, int n_pts, 
   printf("create octree\n");
   return create(fit, fit_multiply, pack, n_threads);
 }
+
+
+extern "C"
+void octree_create_dense_from_pc_cpu(const float* xyz, const float* features, float* vol, int n_pts, int feature_size, ot_size_t depth, ot_size_t height, ot_size_t width, int n_threads) {
+#if defined(_OPENMP)
+  omp_set_num_threads(n_threads);
+#endif
+
+  int* norm = new int[depth * height * width];
+  #pragma omp parallel for
+  for(int idx = 0; idx < depth * height * width; ++idx) {
+    norm[idx] = 0;
+    for(int f = 0; f < feature_size; ++f) {
+      vol[f * depth * height * width + idx] = 0;
+    }
+  }
+  
+  #pragma omp parallel for
+  for(int pt_idx = 0; pt_idx < n_pts; ++pt_idx) {
+    int w = xyz[pt_idx * 3 + 0];
+    int h = xyz[pt_idx * 3 + 1];
+    int d = xyz[pt_idx * 3 + 2];
+    if(w < 0 || w >= width || h < 0 || h >= height || d < 0 || d >= depth) {
+      printf("[WARNING] pt_%d=(%d,%d,%d) is out of volume %d,%d,%d; (%f,%f,%f\n", pt_idx, d,h,w, depth,height,width, xyz[pt_idx * 3 + 0],xyz[pt_idx * 3 + 1],xyz[pt_idx * 3 + 2]);
+      continue;
+    }
+
+    #pragma omp atomic 
+    norm[(d * height + h) * width + w] += 1;
+    for(int f = 0; f < feature_size; ++f) {
+      int vol_idx = ((f * depth + d) * height + h) * width + w;
+      #pragma omp atomic 
+      vol[vol_idx] += features[pt_idx * feature_size + f];
+    }
+  }
+  
+  #pragma omp parallel for
+  for(int idx = 0; idx < depth * height * width; ++idx) {
+    int n = norm[idx];
+    if(n > 0) {
+      for(int f = 0; f < feature_size; ++f) {
+        vol[f * depth * height * width + idx] /= n;
+      }
+    }
+  }
+
+  delete[] norm;
+}
+

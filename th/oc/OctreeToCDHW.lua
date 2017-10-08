@@ -54,11 +54,16 @@ function OctreeToCDHW:updateOutput(input)
   if not self.output:isContiguous() then error('output is not contiguous') end
   if self.output:size(2) ~= input:feature_size() then error('invalid feature_size') end
 
+  -- print(input, input:size())
+  -- print(string.format('[OctreeToCDHW] update output %d,%d,%d', dense_depth, dense_height, dense_width))
+
   if input._type == 'oc_float' then
     oc.cpu.octree_to_cdhw_cpu(input.grid, dense_depth, dense_height, dense_width, self.output:data())
   elseif input._type == 'oc_cuda' then
     oc.gpu.octree_to_cdhw_gpu(input.grid, dense_depth, dense_height, dense_width, self.output:data())
   end
+  
+  -- print(string.format('[OctreeToCDHW] DONE update output %d,%d,%d', dense_depth, dense_height, dense_width))
 
   return self.output
 end 

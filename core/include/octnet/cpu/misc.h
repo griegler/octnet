@@ -23,54 +23,17 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OCTREE_MATH_CPU_H
-#define OCTREE_MATH_CPU_H
+#ifndef OCTREE_MISC_CPU_H
+#define OCTREE_MISC_CPU_H
 
 #include "octnet/core/core.h"
 
 extern "C" {
 
-/// Computes fac1 * in1 + fac2 * in2.
-/// in1 and in2 are expected to have the same tree structure.
-/// @param in1
-/// @param fac1
-/// @param in2
-/// @param fac2
-/// @param check if true, test if tree structure of in1 and in2 are compatible.
-/// @param out
-void octree_add_cpu(const octree* in1, ot_data_t fac1, const octree* in2, ot_data_t fac2, bool check, octree* out);
+void octree_mask_by_label_cpu(const octree* labels, int mask_label, bool check, octree* values);
 
-/// Adds a scalar value to all octree cells.
-/// @param grid
-/// @param scalar
-void octree_scalar_add_cpu(octree* grid, const ot_data_t scalar);
+void octree_determine_gt_split_cpu(const octree* struc, const ot_data_t* gt, octree* out);
 
-/// Multiplies a scalar value to all octree cells.
-/// @param grid
-/// @param scalar
-void octree_scalar_mul_cpu(octree* grid, const ot_data_t scalar);
-
-/// Computes the sign of the octree cells in-place
-/// @param grid
-void octree_sign_cpu(octree* grid);
-
-/// Computes the abs of the octree cells in-place
-/// @param grid
-void octree_abs_cpu(octree* grid);
-
-/// Computes the log of the octree cells in-place
-/// @param grid
-void octree_log_cpu(octree* grid);
-
-/// Computes the minimum cell value in the grid-octree.
-/// @param grid_in
-/// @param minimum cell value.
-ot_data_t octree_min_cpu(const octree* grid_in);
-
-/// Computes the maximum cell value in the grid-octree.
-/// @param grid_in
-/// @param maximum cell value.
-ot_data_t octree_max_cpu(const octree* grid_in);
 
 }
 

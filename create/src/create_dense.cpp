@@ -28,30 +28,33 @@
 
 class OctreeCreateFromDenseCpu : public OctreeCreateCpu {
 public:
-  OctreeCreateFromDenseCpu(ot_size_t depth_, ot_size_t height_, ot_size_t width_, const ot_data_t* data_, int n_ranges_, const ot_data_t* ranges_) : 
-      OctreeCreateCpu((depth_ + 7) / 8, (height_ + 7) / 8, (width_ + 7) / 8, 1), 
-      depth(depth_), height(height_), width(width_), data(data_), n_ranges(n_ranges_), ranges(ranges_) {}
+  OctreeCreateFromDenseCpu(ot_size_t depth_, ot_size_t height_, ot_size_t width_, const ot_data_t* data_, ot_size_t feature_size_) : 
+      OctreeCreateCpu((depth_ + 7) / 8, (height_ + 7) / 8, (width_ + 7) / 8, feature_size_), 
+      depth(depth_), height(height_), width(width_), data(data_) {}
 
   virtual ~OctreeCreateFromDenseCpu() {}
   
   virtual bool is_occupied(float cx, float cy, float cz, float vd, float vh, float vw, int gd, int gh, int gw, OctreeCreateHelperCpu* helper) {
-    // printf("is_occupied %f,%f,%f, %f,%f,%f\n", cx, cy, cz, vw, vh, vd);
     int d1 = cz - vd/2.f; int d2 = cz + vd/2.f;
     int h1 = cy - vh/2.f; int h2 = cy + vh/2.f;
     int w1 = cx - vw/2.f; int w2 = cx + vw/2.f;
-    // printf("  %d,%d, %d,%d, %d,%d, (%d,%d,%d)\n", d1,d2, h1,h2, w1,w2, depth,height,width);
 
-    for(int d = d1; d < d2; ++d) {
-      for(int h = h1; h < h2; ++h) {
-        for(int w = w1; w < w2; ++w) {
-          // printf("    l %d,%d,%d\n", d,h,w);
-          if(d >= 0 && h >= 0 && w >= 0 && d < depth && h < height && w < width) {
-            float val = data[(d * height + h) * width + w];
-            // printf("    lval %f\n", val);
-            
-            for(int ridx = 0; ridx < n_ranges; ++ridx) {
-              if(val >= ranges[ridx*2+0] && val < ranges[ridx*2+1]) {
-                return true;
+    for(int f = 0; f < feature_size; ++f) {
+      float ref = 0; 
+      bool ref_exists = false;
+      for(int d = d1; d < d2; ++d) {
+        for(int h = h1; h < h2; ++h) {
+          for(int w = w1; w < w2; ++w) {
+            if(d >= 0 && h >= 0 && w >= 0 && d < depth && h < height && w < width) {
+              float val = data[((f * depth + d) * height + h) * width + w];
+              if(ref_exists) {
+                if(fabs(val - ref) >= 1e-9) {
+                  return true;
+                }
+              }
+              else {
+                ref = val;
+                ref_exists = true;
               }
             }
           }
@@ -62,12 +65,22 @@ public:
   }
 
   virtual void get_data(bool oc, float cx, float cy, float cz, float vd, float vh, float vw, int gd, int gh, int gw, OctreeCreateHelperCpu* helper, ot_data_t* dst) {
-    // printf("get_data %d: %f,%f,%f, %f,%f,%f -> %p\n", oc, cx,cy,cz, vw,vh,vd, dst);
-    if(oc) {
-      dst[0] = 1;
-    }
-    else {
-      dst[0] = 0;
+    int d1 = cz - vd/2.f; int d2 = cz + vd/2.f;
+    int h1 = cy - vh/2.f; int h2 = cy + vh/2.f;
+    int w1 = cx - vw/2.f; int w2 = cx + vw/2.f;
+
+    for(int f = 0; f < feature_size; ++f) {
+      dst[f] = 0;
+      for(int d = d1; d < d2; ++d) {
+        for(int h = h1; h < h2; ++h) {
+          for(int w = w1; w < w2; ++w) {
+            if(d >= 0 && h >= 0 && w >= 0 && d < depth && h < height && w < width) {
+              dst[f] += data[((f * depth + d) * height + h) * width + w];
+            }
+          }
+        }
+      }
+      dst[f] /= (d2 - d1) * (h2 - h1) * (w2 - w1);
     }
   }
 
@@ -76,15 +89,12 @@ private:
   const ot_size_t height;
   const ot_size_t width;
   const ot_data_t* data;
-
-  int n_ranges;
-  const ot_data_t* ranges;
 };
 
 
 extern "C"
-octree* octree_create_from_dense_cpu(const ot_data_t* data, int depth, int height, int width, int n_ranges, const ot_data_t* ranges, bool fit, int fit_multiply, bool pack, int n_threads) {
-  OctreeCreateFromDenseCpu create(depth, height, width, data, n_ranges, ranges);
+octree* octree_create_from_dense_cpu(const ot_data_t* data, int feature_size, int depth, int height, int width, bool fit, int fit_multiply, bool pack, int n_threads) {
+  OctreeCreateFromDenseCpu create(depth, height, width, data, feature_size);
   return create(fit, fit_multiply, pack, n_threads);
 }
 

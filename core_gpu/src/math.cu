@@ -103,6 +103,62 @@ void octree_scalar_add_gpu(octree* grid, const ot_data_t scalar) {
 }
 
 
+__global__ void kernel_sign(ot_data_t* data, int N) {
+  CUDA_KERNEL_LOOP(idx, N) {
+    float val = data[idx];
+    if(val < 0) {
+      data[idx] = -1;
+    }
+    else if(val > 0) {
+      data[idx] = 1;
+    }
+    else {
+      data[idx] = 0;
+    }
+  }
+}
+extern "C"
+void octree_sign_gpu(octree* grid) {
+  int n = grid->n_leafs * grid->feature_size;
+  kernel_sign<<<GET_BLOCKS(n), CUDA_NUM_THREADS>>>(
+      grid->data, n
+  );
+  CUDA_POST_KERNEL_CHECK;
+}
+
+
+__global__ void kernel_abs(ot_data_t* data, int N) {
+  CUDA_KERNEL_LOOP(idx, N) {
+    float val = data[idx];
+    data[idx] = fabs(val);
+  }
+}
+extern "C"
+void octree_abs_gpu(octree* grid) {
+  int n = grid->n_leafs * grid->feature_size;
+  kernel_abs<<<GET_BLOCKS(n), CUDA_NUM_THREADS>>>(
+      grid->data, n
+  );
+  CUDA_POST_KERNEL_CHECK;
+}
+
+
+__global__ void kernel_log(ot_data_t* data, int N) {
+  CUDA_KERNEL_LOOP(idx, N) {
+    float val = data[idx];
+    data[idx] = log(val);
+  }
+}
+extern "C"
+void octree_log_gpu(octree* grid) {
+  int n = grid->n_leafs * grid->feature_size;
+  kernel_log<<<GET_BLOCKS(n), CUDA_NUM_THREADS>>>(
+      grid->data, n
+  );
+  CUDA_POST_KERNEL_CHECK;
+}
+
+
 
 
 extern "C"

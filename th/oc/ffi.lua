@@ -177,6 +177,9 @@ void octree_logsoftmax_bwd_cpu(const octree* in, const octree* out, const octree
 void octree_add_cpu(const octree* in1, ot_data_t fac1, const octree* in2, ot_data_t fac2, bool check, octree* out);
 void octree_scalar_mul_cpu(octree* grid, const ot_data_t scalar);
 void octree_scalar_add_cpu(octree* grid, const ot_data_t scalar);
+void octree_sign_cpu(octree* grid);
+void octree_abs_cpu(octree* grid);
+void octree_log_cpu(octree* grid);
 ot_data_t octree_min_cpu(const octree* grid_in);
 ot_data_t octree_max_cpu(const octree* grid_in);
 
@@ -185,8 +188,17 @@ void octree_concat_bwd_cpu(const octree* in1, const octree* in2, const octree* g
 void octree_concat_dense_cpu(const octree* in1, const ot_data_t* in2, ot_size_t feature_size2, octree* out);
 void octree_concat_dense_bwd_cpu(const octree* in1, const ot_data_t* in2, ot_size_t feature_size2, const octree* grad_out, bool do_grad_in2, octree* grad_in1, ot_data_t* grad_in2);
 
+void octree_split_by_prob_cpu(const octree* in, const octree* prob, const ot_data_t thr, bool check, octree* out);
+void octree_split_full_cpu(const octree* in, octree* out);
+void octree_split_reconstruction_surface_cpu(const octree* in, const octree* rec, ot_data_t rec_thr_from, ot_data_t rec_thr_to, octree* out);
+void octree_split_bwd_cpu(const octree* in, const octree* grad_out, octree* grad_in);
+void octree_split_dense_reconstruction_surface_fres_cpu(const ot_data_t* features, const ot_data_t* reconstruction, int n, int dense_depth, int dense_height, int dense_width, int feature_size, ot_data_t rec_thr_from, ot_data_t rec_thr_to, int band, octree* out);
+void octree_split_dense_reconstruction_surface_fres_bwd_cpu(const octree* grad_out, ot_data_t* grad_in);
+
 void octree_combine_n_cpu(const octree** in, const int n, octree* out);
 void octree_extract_n_cpu(const octree* in, int from, int to, octree* out);
+void octree_mask_by_label_cpu(const octree* labels, int mask_label, bool check, octree* values);
+void octree_determine_gt_split_cpu(const octree* struc, const ot_data_t* gt, octree* out);
 
 ot_data_t octree_mse_loss_cpu(const octree* input, const octree* target, bool size_average, bool check);
 void octree_mse_loss_bwd_cpu(const octree* input, const octree* target, bool size_average, bool check, octree* grad);
@@ -297,6 +309,9 @@ void octree_logsoftmax_bwd_gpu(const octree* in, const octree* out, const octree
 void octree_add_gpu(const octree* in1, ot_data_t fac1, const octree* in2, ot_data_t fac2, bool check, octree* out);
 void octree_scalar_mul_gpu(octree* grid, const ot_data_t scalar);
 void octree_scalar_add_gpu(octree* grid, const ot_data_t scalar);
+void octree_sign_gpu(octree* grid);
+void octree_abs_gpu(octree* grid);
+void octree_log_gpu(octree* grid);
 ot_data_t octree_min_gpu(const octree* grid_in);
 ot_data_t octree_max_gpu(const octree* grid_in);
 
@@ -306,6 +321,19 @@ void octree_concat_ds_gpu(const octree* in1, const octree* in2, octree* out);
 void octree_concat_ds_bwd_gpu(const octree* in1, const octree* in2, const octree* grad_out, bool do_grad_in2, octree* grad_in1, octree* grad_in2);
 void octree_concat_dense_gpu(const octree* in1, const ot_data_t* in2, ot_size_t feature_size2, octree* out);
 void octree_concat_dense_bwd_gpu(const octree* in1, const ot_data_t* in2, ot_size_t feature_size2, const octree* grad_out, bool do_grad_in2, octree* grad_in1, ot_data_t* grad_in2);
+
+void octree_split_by_prob_gpu(const octree* in, const octree* prob, const ot_data_t thr, bool check, octree* out);
+void octree_split_full_gpu(const octree* in, octree* out);
+void octree_split_reconstruction_surface_gpu(const octree* in, const octree* rec, ot_data_t rec_thr_from, ot_data_t rec_thr_to, octree* out);
+void octree_split_bwd_gpu(const octree* in, const octree* grad_out, octree* grad_in);
+void octree_split_dense_reconstruction_surface_gpu(const ot_data_t* features, const ot_data_t* reconstruction, int n, int dense_depth, int dense_height, int dense_width, int feature_size, ot_data_t rec_thr_from, ot_data_t rec_thr_to, int structure_type, octree* out);
+void octree_split_dense_reconstruction_surface_bwd_gpu(const octree* grad_out, ot_data_t* grad_in);
+void octree_split_dense_reconstruction_surface_fres_gpu(const ot_data_t* features, const ot_data_t* reconstruction, int n, int dense_depth, int dense_height, int dense_width, int feature_size, ot_data_t rec_thr_from, ot_data_t rec_thr_to, int band, octree* out);
+void octree_split_dense_reconstruction_surface_fres_bwd_gpu(const octree* grad_out, ot_data_t* grad_in);
+void octree_split_tsdf_gpu(const ot_data_t* features, const ot_data_t* reconstruction, const octree* guide, int n, int dense_depth, int dense_height, int dense_width, int feature_size, int band, octree* out);
+
+void octree_mask_by_label_gpu(const octree* labels, int mask_label, bool check, octree* values);
+void octree_determine_gt_split_gpu(const octree* struc, const ot_data_t* gt, octree* out);
 
 ot_data_t octree_mse_loss_gpu(const octree* input, const octree* target, bool size_average, bool check);
 void octree_mse_loss_bwd_gpu(const octree* input, const octree* target, bool size_average, bool check, octree* grad);

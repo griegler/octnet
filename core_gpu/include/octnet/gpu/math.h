@@ -50,6 +50,18 @@ void octree_scalar_add_gpu(octree* grid, const ot_data_t scalar);
 /// @param scalar
 void octree_scalar_mul_gpu(octree* grid, const ot_data_t scalar);
 
+/// Computes the sign of the octree cells in-place
+/// @param grid
+void octree_sign_gpu(octree* grid);
+
+/// Computes the abs of the octree cells in-place
+/// @param grid
+void octree_abs_gpu(octree* grid);
+
+/// Computes the log of the octree cells in-place
+/// @param grid
+void octree_log_gpu(octree* grid);
+
 /// Computes the minimum cell value in the grid-octree.
 /// @param grid_in
 /// @param minimum cell value.

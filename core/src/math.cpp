@@ -77,6 +77,45 @@ void octree_scalar_add_cpu(octree* grid, const ot_data_t scalar) {
 
 
 extern "C"
+void octree_sign_cpu(octree* grid) {
+  int n = grid->n_leafs * grid->feature_size;
+  #pragma omp parallel for
+  for(int idx = 0; idx < n; ++idx) {
+    float val = grid->data[idx];
+    if(val < 0) {
+      grid->data[idx] = -1;
+    }
+    else if(val > 0) {
+      grid->data[idx] = 1;
+    }
+    else {
+      grid->data[idx] = 0;
+    }
+  }
+}
+
+extern "C"
+void octree_abs_cpu(octree* grid) {
+  int n = grid->n_leafs * grid->feature_size;
+  #pragma omp parallel for
+  for(int idx = 0; idx < n; ++idx) {
+    float val = grid->data[idx];
+    grid->data[idx] = fabs(val);
+  }
+}
+
+extern "C"
+void octree_log_cpu(octree* grid) {
+  int n = grid->n_leafs * grid->feature_size;
+  #pragma omp parallel for
+  for(int idx = 0; idx < n; ++idx) {
+    float val = grid->data[idx];
+    grid->data[idx] = log(val);
+  }
+}
+
+
+extern "C"
 ot_data_t octree_min_cpu(const octree* grid_in) {
   int n = grid_in->n_leafs * grid_in->feature_size;
   ot_data_t min = grid_in->data[0];
