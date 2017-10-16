@@ -297,11 +297,11 @@ end
 -- can be avoided by overloading functions directly on octree that are needed in fd
 function FloatOctree:data()
   local tensor = torch.FloatTensor()
-  th.THFloatStorage_free(tensor:cdata().storage)
+  oc.torch_cpu.THFloatStorage_free(tensor:cdata().storage)
   tensor:cdata().storage = oc.torch_cpu.octree_data_torch_cpu(self.grid)
-  tensor:cdata().size = th.THAlloc(ffi.sizeof('long') * 1)
+  tensor:cdata().size = oc.torch_cpu.THAlloc(ffi.sizeof('long') * 1)
   tensor:cdata().size[0] = tensor:cdata().storage.size
-  tensor:cdata().stride = th.THAlloc(ffi.sizeof('long') * 1)
+  tensor:cdata().stride = oc.torch_cpu.THAlloc(ffi.sizeof('long') * 1)
   tensor:cdata().stride[0] = 1
   tensor:cdata().nDimension = 1
   tensor:cdata().storageOffset = 0
