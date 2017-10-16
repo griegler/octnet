@@ -29,7 +29,7 @@ function OctreeSplitByProb:__init(prob_mod, threshold, check)
   parent.__init(self)
 
   self.prob_mod = prob_mod or error('need modules from which the split criterion can be computed')
-  self.threshold = theshold or 0 -- 0 through a sigmoid is 0.5
+  self.threshold = threshold or 0 -- 0 through a sigmoid is 0.5
   self.check = check or false
 end
 
