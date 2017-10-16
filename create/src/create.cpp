@@ -463,7 +463,7 @@ octree* OctreeCreateCpu::create_octree(bool fit, int fit_multiply, bool pack, in
   // printf("DONE test feature access\n");
 
   //create octree structure
-  printf("  [OctreeCreateCpu] create octree structure\n");
+  //printf("  [OctreeCreateCpu] create octree structure\n");
 #if defined(_OPENMP)
   omp_set_num_threads(n_threads);
 #endif
@@ -477,18 +477,18 @@ octree* OctreeCreateCpu::create_octree(bool fit, int fit_multiply, bool pack, in
 
   //fit if needed
   if(fit) {
-    printf("  [OctreeCreateCpu] fit octree structure\n");
+    //printf("  [OctreeCreateCpu] fit octree structure\n");
     fit_octree(grid, fit_multiply, helper);
   }
 
   //pack if needed
   if(pack) {
-    printf("  [OctreeCreateCpu] pack octree structure\n");
+    //printf("  [OctreeCreateCpu] pack octree structure\n");
     pack_octree(grid, helper);
   }
 
   //update leafs, data array, data ptrs basd on structure
-  printf("  [OctreeCreateCpu] update octree data structure\n");
+  //printf("  [OctreeCreateCpu] update octree data structure\n");
   update_and_resize_octree(grid);
 
   // printf("test feature access\n");
@@ -503,12 +503,12 @@ octree* OctreeCreateCpu::create_octree(bool fit, int fit_multiply, bool pack, in
 
 
   //read data
-  printf("  [OctreeCreateCpu] fill data\n");
+  //printf("  [OctreeCreateCpu] fill data\n");
 #if defined(_OPENMP)
   omp_set_num_threads(n_threads);
 #endif
   fill_octree_data(grid, pack, helper);
-  printf("  [OctreeCreateCpu] done\n");
+  //printf("  [OctreeCreateCpu] done\n");
 
   return grid;
 }
