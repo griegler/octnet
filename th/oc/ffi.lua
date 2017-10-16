@@ -223,7 +223,7 @@ void volumetric_nn_upsampling_cdhw_bwd_cpu(const ot_data_t* grad_out, int n, int
 THFloatStorage* octree_data_torch_cpu(octree* grid);
 
 // -----------------------------------------------------------------------------
-octree* octree_create_from_dense_cpu(const ot_data_t* data, int depth, int height, int width);
+octree* octree_create_from_dense_cpu(const ot_data_t* data, int feature_size, int depth, int height, int width, bool fit, int fit_multiply, bool pack, int n_threads);
 ]]
 
 --------------------------------------------------------------------------------
