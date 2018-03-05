@@ -32,7 +32,7 @@ extern "C" {
 
 void octree_split_by_prob_gpu(const octree* in, const octree* prob, const ot_data_t thr, bool check, octree* out);
 void octree_split_full_gpu(const octree* in, octree* out);
-void octree_split_reconstruction_surface_gpu(const octree* in, const octree* rec, ot_data_t rec_thr_from, ot_data_trec_thr_to, octree* out);
+void octree_split_reconstruction_surface_gpu(const octree* in, const octree* rec, ot_data_t rec_thr_from, ot_data_t rec_thr_to, octree* out);
 
 void octree_split_bwd_gpu(const octree* in, const octree* grad_out, octree* grad_in);
 
