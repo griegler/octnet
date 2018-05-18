@@ -16,7 +16,7 @@ def write_ply_pcl(out_path, xyz, color=[128,128,128], color_array=None):
   f.write('property uchar blue\n')
   f.write('end_header\n')
 
-  for row in xrange(xyz.shape[0]):
+  for row in range(xyz.shape[0]):
     xyz_row = xyz[row]
     if color_array is not None:
       c = color_array[row]
@@ -27,7 +27,10 @@ def write_ply_pcl(out_path, xyz, color=[128,128,128], color_array=None):
 
 
 def write_ply_boxes(out_path, bxs, binary=False):
-  f = open(out_path, 'wb')
+  if binary:
+    f = open(out_path, 'wb')
+  else:
+    f = open(out_path, 'w')
   f.write("ply\n");
   if binary:
     f.write("format binary_little_endian 1.0\n")
@@ -118,9 +121,9 @@ def write_ply_boxes(out_path, bxs, binary=False):
 def write_ply_voxels(out_path, grid, color=[128,128,128], color_fcn=None, explode=1, binary=False):
   bxs = []
   width = 1
-  for d in xrange(grid.shape[0]):
-    for h in xrange(grid.shape[1]):
-      for w in xrange(grid.shape[2]):
+  for d in range(grid.shape[0]):
+    for h in range(grid.shape[1]):
+      for w in range(grid.shape[2]):
         if grid[d,h,w] == 0:
           continue
         x = w * explode
