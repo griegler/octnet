@@ -27,7 +27,9 @@
 #include <sstream>
 #include <vector>
 #include <string.h>
-
+#ifdef _MSC_VER
+#include <time.h>
+#endif
 #include "octnet/test/objects.h"
 
 #include "octnet/cpu/cpu.h"
@@ -201,7 +203,7 @@ void test_split_rec_surf() {
 }
 
 int main() {
-  srand(time(NULL));
+  srand((unsigned)time(NULL));
   
   test_split_grid_idx();
   test_cdhw_to_octree();

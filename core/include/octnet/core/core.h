@@ -36,8 +36,11 @@
 #include <cstdio>
 #include <cmath>
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
 #include <smmintrin.h>
-
+#endif
 
 #ifdef __CUDA_ARCH__
 #define OCTREE_FUNCTION __host__ __device__

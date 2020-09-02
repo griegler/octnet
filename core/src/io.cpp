@@ -305,11 +305,11 @@ void octree_read_batch_cpu(int n_paths, char** paths, int n_threads, octree* gri
   // for(int path_idx = 0; path_idx < n_paths; ++path_idx) {
   //   printf("  path: '%s'\n", paths[path_idx]);
   // }
-
+  
   //determine necessary memory
   ot_size_t n;
-  ot_size_t n_leafs[n_paths];
-  ot_size_t n_blocks[n_paths];
+  std::vector<ot_size_t> n_leafs(n_paths);
+  std::vector<ot_size_t> n_blocks(n_paths);
 
   FILE* fp = fopen(paths[0], "rb");
   int magic_number = -1;
@@ -323,7 +323,7 @@ void octree_read_batch_cpu(int n_paths, char** paths, int n_threads, octree* gri
   sfread(&(grid_h->grid_height), sizeof(ot_size_t), 1, fp);
   sfread(&(grid_h->grid_width), sizeof(ot_size_t), 1, fp);
   sfread(&(grid_h->feature_size), sizeof(ot_size_t), 1, fp);
-  sfread(n_leafs, sizeof(ot_size_t), 1, fp);
+  sfread(n_leafs.data(), sizeof(ot_size_t), 1, fp);
   n_blocks[0] = n * grid_h->grid_depth * grid_h->grid_height * grid_h->grid_width;
   fclose(fp);
 
@@ -347,7 +347,7 @@ void octree_read_batch_cpu(int n_paths, char** paths, int n_threads, octree* gri
     sfread(&(tmp_grid_height), sizeof(ot_size_t), 1, fp);
     sfread(&(tmp_grid_width), sizeof(ot_size_t), 1, fp);
     sfread(&(tmp_feature_size), sizeof(ot_size_t), 1, fp);
-    sfread(n_leafs + path_idx, sizeof(ot_size_t), 1, fp);
+    sfread(n_leafs.data() + path_idx, sizeof(ot_size_t), 1, fp);
     fclose(fp);
     
     n += tmp_n;
@@ -419,7 +419,7 @@ void dense_read_prealloc_batch_cpu(int n_paths, char** paths, int n_threads, int
     offset *= dims[dim_idx];
   }
 
-  int dims_single[n_dim];
+  std::vector<int> dims_single(n_dim);
   dims_single[0] = 1;
   for(int dim_idx = 1; dim_idx < n_dim; ++dim_idx) {
     dims_single[dim_idx] = dims[dim_idx];
@@ -430,7 +430,7 @@ void dense_read_prealloc_batch_cpu(int n_paths, char** paths, int n_threads, int
   #endif
   #pragma omp parallel for
   for(int path_idx = 0; path_idx < n_paths; ++path_idx) {
-    dense_read_prealloc_cpu(paths[path_idx], n_dim, dims_single, data + path_idx * offset);
+    dense_read_prealloc_cpu(paths[path_idx], n_dim, dims_single.data(), data + path_idx * offset);
   }
 }
 
